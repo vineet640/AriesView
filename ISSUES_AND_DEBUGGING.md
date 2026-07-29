@@ -250,6 +250,37 @@ the app and its cloud emulator.
 
 ---
 
+## 10. Two Jest workers racing on one SQLite-backed file
+
+**Symptom:** With the Node version fixed (issue #9), CI failed differently:
+`dedup.test.js` errored with `database is locked` while `prompt.test.js`
+passed in the same run — a flaky-looking failure that didn't reproduce
+locally on the first few tries.
+
+**Diagnosis:** Jest runs each test file in its own worker process,
+concurrently by default. Both `dedup.test.js` and `prompt.test.js` load a
+gateway module that ends up touching the same `--localstorage-file`
+SQLite-backed file (from issue #4's fix) — two processes opening one
+SQLite file at close to the same instant lose the race for its lock. This
+is a genuine concurrency bug, not leftover state: the earlier "just delete
+the stale /tmp file" fix (issue #4) only ever worked because the two
+workers' timing happened not to collide on this machine; GitHub's runners
+hit the collision far more reliably.
+
+**Fix:** Run Jest with `--runInBand` (single worker, tests execute
+sequentially) so only one process ever holds the file. Correct by
+construction — with one worker there's no second process to race against
+— rather than a timing-dependent workaround.
+
+**Lesson:** A fix that "usually passes locally" for a concurrency bug is
+not evidence the bug is gone; it's evidence the race window is narrow on
+your machine. A shared file-based resource (a lock, a cache, a local DB)
+touched by parallel test workers needs either serialized access or one
+resource per worker — reproducing intermittently and reproducing
+*reliably in CI* both count as the bug being real.
+
+---
+
 ## Quick-reference: one-liners if asked "what problems did you hit?"
 
 1. **8B model on an 8GB machine swap-thrashed to 0.2 tok/s** → measured raw
@@ -273,3 +304,6 @@ the app and its cloud emulator.
    flag, verified by listing the actual blobs, not just the HTTP status.
 9. **CI pinned to Node 20 broke a fix written for Node 25** → matched CI's
    Node version to local dev instead of guessing an LTS default.
+10. **Two Jest workers raced on one SQLite-backed localStorage file** →
+    `database is locked` in CI, rarely locally; forced single-worker
+    execution (`--runInBand`) so the race is impossible by construction.

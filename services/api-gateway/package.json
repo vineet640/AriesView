@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "test": "NODE_OPTIONS=--localstorage-file=/tmp/ariesview-jest-localstorage jest"
+    "test": "NODE_OPTIONS=--localstorage-file=/tmp/ariesview-jest-localstorage jest --runInBand"
   },
   "dependencies": {
     "cors": "^2.8.5",
