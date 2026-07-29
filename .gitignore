@@ -1,0 +1,22 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Runtime / generated data (ingested docs now live in Azure Blob / Azurite,
+# not on disk; Weaviate + Azurite data live in Docker volumes)
+storage/
+logs/
+
+# Env / secrets
+.env
+.env.*
+
+# OS / editor cruft
+.DS_Store
+.Rhistory
