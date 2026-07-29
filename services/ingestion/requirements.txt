@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pymupdf
+weaviate-client
+httpx
+numpy
+azure-storage-blob
