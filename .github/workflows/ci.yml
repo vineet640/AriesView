@@ -28,7 +28,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Node 25 -- matches local dev, and is why the test script's
+          # NODE_OPTIONS=--localstorage-file fix (see ISSUES_AND_DEBUGGING.md)
+          # is needed at all; it isn't a valid NODE_OPTIONS flag on Node 20.
+          node-version: "25"
           cache: "npm"
           cache-dependency-path: services/api-gateway/package-lock.json
       - name: Install dependencies

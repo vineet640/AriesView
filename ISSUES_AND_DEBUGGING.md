@@ -222,6 +222,34 @@ the same as verifying "the data is actually there."
 
 ---
 
+## 9. CI's Node version didn't match the fix it was supposed to run
+
+**Symptom:** The first GitHub Actions run failed the gateway's Jest suite
+immediately: `node: --localstorage-file= is not allowed in NODE_OPTIONS`
+— a different error than the one that flag was written to fix (see issue
+#4 above).
+
+**Diagnosis:** The CI workflow pinned Node to version 20 (a reasonable-
+looking default when writing the workflow). But `--localstorage-file` is
+only a valid `NODE_OPTIONS` flag on the Node version whose *new*
+`localStorage` global made it necessary in the first place — Node 25,
+the version actually used in local development. Node 20 doesn't recognize
+the flag via `NODE_OPTIONS` at all, so the exact fix for one Node version
+became a hard failure on another.
+
+**Fix:** Set the workflow's `node-version` to `25`, matching local dev
+instead of an arbitrary LTS default.
+
+**Lesson:** A version-specific workaround is only portable to the *same*
+version. Pinning CI to "whatever LTS looks reasonable" instead of the
+version actually used in development is itself a way to reintroduce a bug
+you already fixed once — the CI environment should mirror local dev
+closely enough that this doesn't happen. This is the same shape of problem
+as issue #8 above, just between the test runtime and the app instead of
+the app and its cloud emulator.
+
+---
+
 ## Quick-reference: one-liners if asked "what problems did you hit?"
 
 1. **8B model on an 8GB machine swap-thrashed to 0.2 tok/s** → measured raw
@@ -243,3 +271,5 @@ the same as verifying "the data is actually there."
 8. **Azure SDK vs. Azurite version skew rejected every blob call** → read
    the error body, applied Azurite's documented `--skipApiVersionCheck`
    flag, verified by listing the actual blobs, not just the HTTP status.
+9. **CI pinned to Node 20 broke a fix written for Node 25** → matched CI's
+   Node version to local dev instead of guessing an LTS default.
